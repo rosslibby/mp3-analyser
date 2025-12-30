@@ -13,8 +13,6 @@ export async function fileUpload(req: Request, res: Response) {
     limits: { files: 1 },
   });
 
-  let fileProcessed = false;
-
   busboy.on('file', (name, file, info) => {
     if (!isValidFile(info)) {
       file.resume();
@@ -22,10 +20,17 @@ export async function fileUpload(req: Request, res: Response) {
         .json({ error: 'Please upload a valid MP3 file' });
     }
 
-    fileProcessed = true;
+    // handle stream errors
+    file.on('error', (err) => {
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Stream interrupted' });
+      }
+    });
 
     analyzeMP3(file)
       .then((frameCount) => {
+        if (res.headersSent) return;
+
         if (frameCount === 0) {
           return res.status(422)
             .json({ error: 'No valid MP3 frames detected' });
@@ -34,6 +39,8 @@ export async function fileUpload(req: Request, res: Response) {
         res.status(200).json({ frameCount });
       })
       .catch((err) => {
+        if (res.headersSent) return;
+
         console.error('Processing error:', err);
         res.status(500).json({ error: 'Failed to parse MP3 frames' });
       });
@@ -45,11 +52,12 @@ export async function fileUpload(req: Request, res: Response) {
   });
 
   busboy.on('finish', () => {
-    if (!fileProcessed) {
+    // ensure file prcessing has started before checking for sent headers
+    setImmediate(() => {
       if (!res.headersSent) {
         res.status(400).json({ error: 'No file was uploaded' });
       }
-    }
+    })
   });
 
   req.pipe(busboy);
