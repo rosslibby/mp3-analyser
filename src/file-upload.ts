@@ -1,11 +1,11 @@
-import Busboy from 'busboy';
-import type { Request, Response } from 'express';
-import { SUPPORTED_MIME_TYPES } from './constants';
-import { analyzeMP3 } from './mp3-analysis';
+import Busboy from "busboy";
+import type { Request, Response } from "express";
+import { SUPPORTED_MIME_TYPES } from "./constants";
+import { analyzeMP3 } from "./mp3-analysis";
 
 const isValidFile = (info: Busboy.FileInfo): boolean =>
   SUPPORTED_MIME_TYPES.includes(info.mimeType) ||
-  info.filename.toLowerCase().endsWith('.mp3');
+  info.filename.toLowerCase().endsWith(".mp3");
 
 export async function fileUpload(req: Request, res: Response) {
   const busboy = Busboy({
@@ -13,17 +13,17 @@ export async function fileUpload(req: Request, res: Response) {
     limits: { files: 1 },
   });
 
-  busboy.on('file', (name, file, info) => {
+  busboy.on("file", (_name, file, info) => {
     if (!isValidFile(info)) {
       file.resume();
-      return res.status(400)
-        .json({ error: 'Please upload a valid MP3 file' });
+      return res.status(400).json({ error: "Please upload a valid MP3 file" });
     }
 
     // handle stream errors
-    file.on('error', (err) => {
+    file.on("error", (err) => {
       if (!res.headersSent) {
-        res.status(500).json({ error: 'Stream interrupted' });
+        console.error("Stream error:", err);
+        res.status(500).json({ error: "Stream interrupted" });
       }
     });
 
@@ -32,32 +32,33 @@ export async function fileUpload(req: Request, res: Response) {
         if (res.headersSent) return;
 
         if (frameCount === 0) {
-          return res.status(422)
-            .json({ error: 'No valid MP3 frames detected' });
+          return res
+            .status(422)
+            .json({ error: "No valid MP3 frames detected" });
         }
-        res.set('Content-Type', 'application/json');
+        res.set("Content-Type", "application/json");
         res.status(200).json({ frameCount });
       })
       .catch((err) => {
         if (res.headersSent) return;
 
-        console.error('Processing error:', err);
-        res.status(500).json({ error: 'Failed to parse MP3 frames' });
+        console.error("Processing error:", err);
+        res.status(500).json({ error: "Failed to parse MP3 frames" });
       });
   });
 
-  busboy.on('error', (err) => {
-    console.error('Upload error:', err);
-    res.status(500).json({ error: 'Upload error' })
+  busboy.on("error", (err) => {
+    console.error("Upload error:", err);
+    res.status(500).json({ error: "Upload error" });
   });
 
-  busboy.on('finish', () => {
+  busboy.on("finish", () => {
     // ensure file prcessing has started before checking for sent headers
     setImmediate(() => {
       if (!res.headersSent) {
-        res.status(400).json({ error: 'No file was uploaded' });
+        res.status(400).json({ error: "No file was uploaded" });
       }
-    })
+    });
   });
 
   req.pipe(busboy);

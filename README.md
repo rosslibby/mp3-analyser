@@ -6,7 +6,7 @@ A high-performance streaming API built with Node.js, TypeScript, and Express to 
 
 ### Memory-efficient streaming
 
-The application utilizes `busboy` to pipe incoming file streams directly into the analyzer. By using a "sliding window" buffer approach, the service maintains near-constant memory usage (`O(1)` relative to file size), making it capable of processing multi-gigabyte files without memory exhaustion.
+The application utilizes **busboy** to pipe incoming file streams directly into the analyzer. By using a "sliding window" buffer approach, the service maintains near-constant memory usage (`O(1)` relative to file size), making it capable of processing multi-gigabyte files without memory exhaustion.
 
 ### Robust frame validation
 
@@ -49,10 +49,6 @@ npm start
 npm run dev
 ```
 
-<br>
-
-# Testing
-
 **API endpoint:** `POST /file-upload`
 
 **Field name:** `mp3`
@@ -68,6 +64,29 @@ curl -X POST http://localhost:3000/file-upload \
 #   "frameCount": 6089
 # }
 ```
+
+<br>
+
+# Unit testing
+
+The project uses **Vitest** for unit testing core logic. The tests focus on the most critical parts of the application: the binary parsing utilities and the frame validation logic.
+
+### Running tests
+
+To execute the test suite, run:
+
+```bash
+npm test
+```
+
+### Test Coverage
+- **ID3 Tag Detection:** Verifies the identification of ID3v2 magic numbers.
+- **Synchsafe Integer Calculation:** Validates the custom bit-shifting logic used to determine ID3 header sizes.
+- **Header Validation:** Ensures that the parser correctly identifies valid vs. corrupted MPEG frame headers.
+- **Lookup Tables:** Confirms that bitrate and sample rate indices map correctly to their respective constants.
+
+# Lint
+- `npm run lint`
 
 ### Verification
 
