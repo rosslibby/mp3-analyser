@@ -30,3 +30,19 @@ export function findTotalId3Size(
   // header size excludes the 10-byte header itself
   return size + 10;
 }
+
+export const isSync = (
+  buffer: Buffer,
+  cursor: number,
+): boolean =>
+  buffer[cursor] === 0xFF &&
+  (buffer[cursor + 1] & 0xE0) === 0xE0;
+
+export function isValidHeader(
+  bitrateIndex: number,
+  samplerateIndex: number,
+): boolean {
+  const validBitrate = bitrateIndex > 0 && bitrateIndex < 15;
+  const validSamplerate = samplerateIndex < 3;
+  return validBitrate && validSamplerate;
+}
