@@ -1,4 +1,6 @@
-.env*
+.env.local
+.env.prod
+.env.dev
 .DS_Store
 node_modules/
 dist/
