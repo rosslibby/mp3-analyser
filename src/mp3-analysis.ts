@@ -1,6 +1,6 @@
-import { Readable } from 'node:stream';
-import { BITRATES, SAMPLERATES } from './constants';
-import { findTotalId3Size, isId3, isSync, isValidHeader } from './utils';
+import { Readable } from "node:stream";
+import { BITRATES, SAMPLERATES } from "./constants";
+import { findTotalId3Size, isId3, isSync, isValidHeader } from "./utils";
 
 export async function analyzeMP3(stream: Readable): Promise<number> {
   let buffer = Buffer.alloc(0);
@@ -30,14 +30,15 @@ export async function analyzeMP3(stream: Readable): Promise<number> {
         const headerByte = buffer[cursor + 2];
 
         if (headerByte !== undefined) {
-          const bitrateIndex = (headerByte & 0xF0) >> 4;
-          const samplerateIndex = (headerByte & 0x0C) >> 2;
+          const bitrateIndex = (headerByte & 0xf0) >> 4;
+          const samplerateIndex = (headerByte & 0x0c) >> 2;
           const padding = (headerByte & 0x02) >> 1;
 
           if (isValidHeader(bitrateIndex, samplerateIndex)) {
             const bitrate = BITRATES[bitrateIndex]! * 1000;
             const samplerate = SAMPLERATES[samplerateIndex]!;
-            const frameSize = Math.floor((144 * bitrate) / samplerate) + padding;
+            const frameSize =
+              Math.floor((144 * bitrate) / samplerate) + padding;
 
             const nextSyncPosition = cursor + frameSize;
 
@@ -60,7 +61,7 @@ export async function analyzeMP3(stream: Readable): Promise<number> {
     }
 
     // Update buffer to retain only unprocessed bytes
-    buffer = buffer.subarray(cursor)
+    buffer = buffer.subarray(cursor);
     cursor = 0;
   }
 

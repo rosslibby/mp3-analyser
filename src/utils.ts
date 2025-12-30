@@ -1,9 +1,6 @@
-import { BITRATES } from './constants';
+import { BITRATES } from "./constants";
 
-export function isId3(
-  buffer: Buffer,
-  cursor: number,
-): boolean {
+export function isId3(buffer: Buffer, cursor: number): boolean {
   if (buffer.length < cursor + 3) return false;
 
   const magicNumber =
@@ -14,10 +11,7 @@ export function isId3(
   return magicNumber;
 }
 
-export function findTotalId3Size(
-  buffer: Buffer,
-  offset: number = 0,
-): number {
+export function findTotalId3Size(buffer: Buffer, offset: number = 0): number {
   // Require 10 bytes for header
   if (buffer.length < offset + 10) return 0;
 
@@ -32,7 +26,8 @@ export function findTotalId3Size(
     byte2 === undefined ||
     byte3 === undefined ||
     byte4 === undefined
-  ) return 0;
+  )
+    return 0;
 
   const size = (byte1 << 21) | (byte2 << 14) | (byte3 << 7) | byte4;
 
@@ -40,15 +35,14 @@ export function findTotalId3Size(
   return size + 10;
 }
 
-export const isSync = (
-  buffer: Buffer,
-  cursor: number,
-): boolean => {
+export const isSync = (buffer: Buffer, cursor: number): boolean => {
   const headerByte = buffer[cursor + 1];
-  return headerByte !== undefined &&
-    buffer[cursor] === 0xFF &&
-    (headerByte & 0xE0) === 0xE0;
-}
+  return (
+    headerByte !== undefined &&
+    buffer[cursor] === 0xff &&
+    (headerByte & 0xe0) === 0xe0
+  );
+};
 
 export function isValidHeader(
   bitrateIndex: number,
