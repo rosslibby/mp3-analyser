@@ -13,7 +13,7 @@ export async function fileUpload(req: Request, res: Response) {
     limits: { files: 1 },
   });
 
-  busboy.on('file', (name, file, info) => {
+  busboy.on('file', (_name, file, info) => {
     if (!isValidFile(info)) {
       file.resume();
       return res.status(400)
@@ -23,6 +23,7 @@ export async function fileUpload(req: Request, res: Response) {
     // handle stream errors
     file.on('error', (err) => {
       if (!res.headersSent) {
+        console.error('Stream error:', err);
         res.status(500).json({ error: 'Stream interrupted' });
       }
     });

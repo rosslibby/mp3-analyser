@@ -27,28 +27,32 @@ export async function analyzeMP3(stream: Readable): Promise<number> {
 
     while (cursor <= buffer.length - 8) {
       if (isSync(buffer, cursor)) {
-        const bitrateIndex = (buffer[cursor + 2] & 0xF0) >> 4;
-        const samplerateIndex = (buffer[cursor + 2] & 0x0C) >> 2;
-        const padding = (buffer[cursor + 2] & 0x02) >> 1;
+        const headerByte = buffer[cursor + 2];
 
-        if (isValidHeader(bitrateIndex, samplerateIndex)) {
-          const bitrate = BITRATES[bitrateIndex] * 1000;
-          const samplerate = SAMPLERATES[samplerateIndex];
-          const frameSize = Math.floor((144 * bitrate) / samplerate) + padding;
+        if (headerByte !== undefined) {
+          const bitrateIndex = (headerByte & 0xF0) >> 4;
+          const samplerateIndex = (headerByte & 0x0C) >> 2;
+          const padding = (headerByte & 0x02) >> 1;
 
-          const nextSyncPosition = cursor + frameSize;
+          if (isValidHeader(bitrateIndex, samplerateIndex)) {
+            const bitrate = BITRATES[bitrateIndex]! * 1000;
+            const samplerate = SAMPLERATES[samplerateIndex]!;
+            const frameSize = Math.floor((144 * bitrate) / samplerate) + padding;
 
-          // Verify that next frame exists AND has sync bits
-          if (nextSyncPosition + 1 < buffer.length) {
-            if (isSync(buffer, nextSyncPosition)) {
-              frames++;
-              cursor += frameSize;
-              continue;
+            const nextSyncPosition = cursor + frameSize;
+
+            // Verify that next frame exists AND has sync bits
+            if (nextSyncPosition + 1 < buffer.length) {
+              if (isSync(buffer, nextSyncPosition)) {
+                frames++;
+                cursor += frameSize;
+                continue;
+              }
+            } else {
+              // Identified potential frame but can't see next sync
+              // Break loop & wait for more data
+              break;
             }
-          } else {
-            // Identified potential frame but can't see next sync
-            // Break loop & wait for more data
-            break;
           }
         }
       }

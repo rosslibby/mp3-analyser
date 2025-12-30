@@ -1,3 +1,5 @@
+import { BITRATES } from './constants';
+
 export function isId3(
   buffer: Buffer,
   cursor: number,
@@ -25,6 +27,13 @@ export function findTotalId3Size(
   const byte3 = buffer[offset + 8];
   const byte4 = buffer[offset + 9];
 
+  if (
+    byte1 === undefined ||
+    byte2 === undefined ||
+    byte3 === undefined ||
+    byte4 === undefined
+  ) return 0;
+
   const size = (byte1 << 21) | (byte2 << 14) | (byte3 << 7) | byte4;
 
   // header size excludes the 10-byte header itself
@@ -34,15 +43,18 @@ export function findTotalId3Size(
 export const isSync = (
   buffer: Buffer,
   cursor: number,
-): boolean =>
-  buffer[cursor] === 0xFF &&
-  (buffer[cursor + 1] & 0xE0) === 0xE0;
+): boolean => {
+  const headerByte = buffer[cursor + 1];
+  return headerByte !== undefined &&
+    buffer[cursor] === 0xFF &&
+    (headerByte & 0xE0) === 0xE0;
+}
 
 export function isValidHeader(
   bitrateIndex: number,
   samplerateIndex: number,
 ): boolean {
-  const validBitrate = bitrateIndex > 0 && bitrateIndex < 15;
-  const validSamplerate = samplerateIndex < 3;
+  const validBitrate = bitrateIndex > 0 && bitrateIndex < BITRATES.length - 1;
+  const validSamplerate = samplerateIndex < 3 && samplerateIndex >= 0;
   return validBitrate && validSamplerate;
 }
