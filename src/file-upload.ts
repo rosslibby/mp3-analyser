@@ -46,7 +46,9 @@ export async function fileUpload(req: Request, res: Response) {
 
   busboy.on('finish', () => {
     if (!fileProcessed) {
-      res.status(400).json({ error: 'No file was uploaded' });
+      if (!res.headersSent) {
+        res.status(400).json({ error: 'No file was uploaded' });
+      }
     }
   });
 
