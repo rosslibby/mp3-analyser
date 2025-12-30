@@ -25,7 +25,7 @@ export function findTotalId3Size(
   const byte3 = buffer[offset + 8];
   const byte4 = buffer[offset + 9];
 
-  const size = byte1 << 21 | byte2 << 14 | byte3 << 7 | byte4;
+  const size = (byte1 << 21) | (byte2 << 14) | (byte3 << 7) | byte4;
 
   // header size excludes the 10-byte header itself
   return size + 10;
